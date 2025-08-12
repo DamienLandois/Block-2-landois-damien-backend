@@ -2,15 +2,21 @@ services:
   backend:
     build: .
     container_name: massage-backend
+    command: npm run start:dev
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=1
     ports:
-      - "3000:3000"
+      - "3001:3000"
+      - "5555:5555"
     volumes:
       - .:/app
-      - /app/node_modules
+      - node_modules:/app/node_modules
     env_file:
       - .env
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: mysql:8
@@ -22,9 +28,15 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - ${DB_PORT}
+      - ${DB_PORT}:3306
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
 
 volumes:
   db_data:
+  node_modules:
