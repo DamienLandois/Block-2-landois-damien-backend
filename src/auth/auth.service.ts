@@ -19,6 +19,7 @@ export class AuthService {
         firstname: true,
         name: true,
         password: true,
+        role: true,
       },
     });
     if (!user?.password) throw new UnauthorizedException('Invalid credentials');
@@ -32,8 +33,8 @@ export class AuthService {
     return safe;
   }
 
-  async signAccessToken(user: { id: string; email: string }) {
-    const payload = { sub: user.id, email: user.email };
+  async signAccessToken(user: { id: string; email: string; role: string }) {
+    const payload = { sub: user.id, email: user.email, role: user.role };
     return this.jwt.signAsync(payload);
   }
 }

@@ -1,6 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Reflector } from '@nestjs/core';
+import { UserRole } from './enums/user-role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
@@ -11,6 +16,20 @@ const mockUserService = {
   createUser: jest.fn(),
   updateUser: jest.fn(),
   deleteUser: jest.fn(),
+};
+
+const mockPrismaService = {
+  user: {
+    findUnique: jest.fn(),
+  },
+};
+
+const mockJwtAuthGuard = {
+  canActivate: jest.fn(() => true),
+};
+
+const mockRolesGuard = {
+  canActivate: jest.fn(() => true),
 };
 
 describe('UserController', () => {
@@ -25,8 +44,23 @@ describe('UserController', () => {
           provide: UserService,
           useValue: mockUserService, // On remplace le vrai service par notre faux
         },
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+        {
+          provide: Reflector,
+          useValue: {
+            getAllAndOverride: jest.fn(),
+          },
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue(mockJwtAuthGuard)
+      .overrideGuard(RolesGuard)
+      .useValue(mockRolesGuard)
+      .compile();
 
     controller = module.get<UserController>(UserController);
     userService = module.get(UserService);
@@ -138,7 +172,10 @@ describe('UserController', () => {
 
       expect(result).toEqual(createdUser);
       expect(userService.createUser).toHaveBeenCalledTimes(1);
-      expect(userService.createUser).toHaveBeenCalledWith(createUserDto);
+      expect(userService.createUser).toHaveBeenCalledWith({
+        ...createUserDto,
+        role: UserRole.USER,
+      });
     });
 
     // Mock le service, appelle controller.createUser() avec seulement les champs requis, vérifie qu'on reçoit l'utilisateur
@@ -160,7 +197,10 @@ describe('UserController', () => {
       const result = await controller.createUser(createUserDto);
 
       expect(result).toEqual(createdUser);
-      expect(userService.createUser).toHaveBeenCalledWith(createUserDto);
+      expect(userService.createUser).toHaveBeenCalledWith({
+        ...createUserDto,
+        role: UserRole.USER,
+      });
     });
   });
 

@@ -3,6 +3,7 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { UserRole } from '../user/enums/user-role.enum';
 
 // On mock bcryptjs pour contrôler les comparaisons de mots de passe
 jest.mock('bcryptjs', () => ({
@@ -70,6 +71,7 @@ describe('AuthService', () => {
         firstname: 'Damien',
         name: 'Landois',
         password: 'hashed_password',
+        role: UserRole.USER,
       };
 
       // Configuration des mocks pour un cas de succès
@@ -85,6 +87,7 @@ describe('AuthService', () => {
         email: 'damien.landois@test.com',
         firstname: 'Damien',
         name: 'Landois',
+        role: UserRole.USER,
       });
 
       // Vérifier que l'email est bien converti en minuscules
@@ -96,6 +99,7 @@ describe('AuthService', () => {
           firstname: true,
           name: true,
           password: true,
+          role: true,
         },
       });
 
@@ -112,6 +116,7 @@ describe('AuthService', () => {
         firstname: 'Damien',
         name: 'Landois',
         password: 'hashed_password',
+        role: UserRole.ADMIN,
       };
 
       prisma.user.findUnique.mockResolvedValue(userFromDb);
@@ -126,6 +131,7 @@ describe('AuthService', () => {
         email: 'damien.landois@gmail.com',
         firstname: 'Damien',
         name: 'Landois',
+        role: UserRole.ADMIN,
       };
       expect(result).toEqual(expectedResult);
 
@@ -162,6 +168,7 @@ describe('AuthService', () => {
         firstname: 'Marie',
         name: 'George',
         password: null,
+        role: UserRole.USER,
       };
 
       prisma.user.findUnique.mockResolvedValue(userWithoutPassword);
@@ -183,6 +190,7 @@ describe('AuthService', () => {
         firstname: 'Damien',
         name: 'Landois',
         password: 'hashed_password',
+        role: UserRole.USER,
       };
 
       prisma.user.findUnique.mockResolvedValue(userFromDb);
@@ -202,28 +210,37 @@ describe('AuthService', () => {
   // Tests pour générer un token JWT
   describe('signAccessToken', () => {
     // Mock le JwtService, appelle signAccessToken(), vérifie qu'on reçoit le token avec bon payload
-    it('should generate a JWT token with correct payload', async () => {
-      const user = { id: 'a1b2c3', email: 'damien.landois@test.com' };
+    it('should generate a JWT token with correct payload including role', async () => {
+      const user = {
+        id: 'a1b2c3',
+        email: 'damien.landois@test.com',
+        role: UserRole.USER,
+      };
       const expectedToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1MSIsImVtYWlsIjoiZGFtaWVuLmxhbmRvaXNAdGVzdC5jb20ifQ.token';
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1MSIsImVtYWlsIjoiZGFtaWVuLmxhbmRvaXNAdGVzdC5jb20iLCJyb2xlIjoiVVNFUiJ9.token';
 
       jwtService.signAsync.mockResolvedValue(expectedToken);
 
       const result = await service.signAccessToken(user);
 
       expect(result).toBe(expectedToken);
-      // Vérifier que le payload contient les bonnes informations
+      // Vérifier que le payload contient les bonnes informations avec le rôle
       expect(jwtService.signAsync).toHaveBeenCalledWith({
         sub: 'a1b2c3',
         email: 'damien.landois@test.com',
+        role: UserRole.USER,
       });
     });
 
-    // Mock le JwtService, appelle signAccessToken() avec autres données, vérifie la génération de token
-    it('should handle different user data formats', async () => {
-      const user = { id: 'u2', email: 'marie.george@test.com' };
+    // Mock le JwtService, appelle signAccessToken() avec admin, vérifie la génération de token
+    it('should handle admin user data with correct role', async () => {
+      const user = {
+        id: 'q1s2d3',
+        email: 'marie.george@test.com',
+        role: UserRole.ADMIN,
+      };
       const expectedToken =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1MiIsImVtYWlsIjoibWFyaWUuZHVwb250QHRlc3QuY29tIn0.token';
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1MiIsImVtYWlsIjoibWFyaWUuZ2VvcmdlQHRlc3QuY29tIiwicm9sZSI6IkFETUlOIn0.token';
 
       jwtService.signAsync.mockResolvedValue(expectedToken);
 
@@ -231,8 +248,9 @@ describe('AuthService', () => {
 
       expect(result).toBe(expectedToken);
       expect(jwtService.signAsync).toHaveBeenCalledWith({
-        sub: 'u2',
+        sub: 'q1s2d3',
         email: 'marie.george@test.com',
+        role: UserRole.ADMIN,
       });
     });
   });
