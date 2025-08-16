@@ -8,6 +8,7 @@ import { Prisma } from '@prisma/client';
 import { hash } from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserRole } from './enums/user-role.enum';
 
 @Injectable()
 export class UserService {
@@ -21,6 +22,7 @@ export class UserService {
         name: true,
         email: true,
         phoneNumber: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -39,6 +41,7 @@ export class UserService {
         name: true,
         email: true,
         phoneNumber: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -58,6 +61,7 @@ export class UserService {
           firstname: data.firstname ?? null,
           name: data.name ?? null,
           phoneNumber: data.phoneNumber ?? null,
+          role: data.role ?? UserRole.USER,
         },
         select: {
           id: true,
@@ -65,6 +69,7 @@ export class UserService {
           firstname: true,
           name: true,
           phoneNumber: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
         },
@@ -106,6 +111,7 @@ export class UserService {
           firstname: true,
           name: true,
           phoneNumber: true,
+          role: true,
           createdAt: true,
           updatedAt: true,
         },

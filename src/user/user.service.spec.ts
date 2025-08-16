@@ -70,7 +70,6 @@ describe('UserService', () => {
       expect(res).toEqual(mockUsers);
       expect(prisma.user.findMany).toHaveBeenCalledTimes(1);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const expectedFirstUser = {
         id: 'a1b2c3',
         email: 'damien.landois@test.com',

@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { UserRole } from '../user/enums/user-role.enum';
 
 // Faux AuthService pour les tests
 const mockAuthService = {
@@ -43,10 +44,11 @@ describe('AuthController', () => {
       // Le guard a déjà validé les identifiants et mis l'utilisateur dans req.user
       const mockRequest = {
         user: {
-          id: 'u1',
+          id: 'q1s2d3',
           email: 'damien.landois@test.com',
           firstname: 'Damien',
           name: 'Landois',
+          role: UserRole.USER,
         },
       };
       const mockAccessToken =
@@ -66,8 +68,9 @@ describe('AuthController', () => {
       // Vérifier que le service a été appelé avec les bonnes données
       expect(authService.signAccessToken).toHaveBeenCalledTimes(1);
       expect(authService.signAccessToken).toHaveBeenCalledWith({
-        id: 'u1',
+        id: 'q1s2d3',
         email: 'damien.landois@test.com',
+        role: UserRole.USER,
       });
     });
 
@@ -78,8 +81,9 @@ describe('AuthController', () => {
         user: {
           id: 'z1e2r3',
           email: 'marie.george@test.com',
-          firstname: null,
-          name: null,
+          firstname: undefined,
+          name: undefined,
+          role: UserRole.USER,
         },
       };
       const mockAccessToken =
@@ -98,6 +102,7 @@ describe('AuthController', () => {
       expect(authService.signAccessToken).toHaveBeenCalledWith({
         id: 'z1e2r3',
         email: 'marie.george@test.com',
+        role: UserRole.USER,
       });
     });
 
@@ -110,6 +115,7 @@ describe('AuthController', () => {
           email: 'antoine.failla@test.com',
           firstname: 'Antoine',
           name: 'Failla',
+          role: UserRole.USER,
         },
       };
       const mockAccessToken =
@@ -124,6 +130,7 @@ describe('AuthController', () => {
       expect(authService.signAccessToken).toHaveBeenCalledWith({
         id: 'abc123def456',
         email: 'antoine.failla@test.com',
+        role: UserRole.USER,
       });
     });
 
@@ -132,8 +139,9 @@ describe('AuthController', () => {
       // Si le service JWT plante, l'erreur doit remonter
       const mockRequest = {
         user: {
-          id: 'u1',
+          id: 'q1s2d3',
           email: 'damien.landois@test.com',
+          role: UserRole.USER,
         },
       };
 
@@ -145,8 +153,9 @@ describe('AuthController', () => {
         'JWT signing failed',
       );
       expect(authService.signAccessToken).toHaveBeenCalledWith({
-        id: 'u1',
+        id: 'q1s2d3',
         email: 'damien.landois@test.com',
+        role: UserRole.USER,
       });
     });
 
@@ -155,14 +164,14 @@ describe('AuthController', () => {
       // Même si req.user contient plein d'infos, seuls id et email vont dans le token
       const mockRequest = {
         user: {
-          id: 'u1',
+          id: 'q1s2d3',
           email: 'sophie.bolle@test.com',
           firstname: 'Sophie',
           name: 'Bolle',
           phoneNumber: '0123456789',
           createdAt: '2025-01-01',
           updatedAt: '2025-12-01',
-          // ... autres champs possibles
+          role: UserRole.USER,
         },
       };
       const mockAccessToken =
@@ -172,10 +181,11 @@ describe('AuthController', () => {
 
       await controller.login(mockRequest);
 
-      // Seuls id et email sont passés au service, pas les autres champs
+      // Seuls id, email et role sont passés au service, pas les autres champs
       expect(authService.signAccessToken).toHaveBeenCalledWith({
-        id: 'u1',
+        id: 'q1s2d3',
         email: 'sophie.bolle@test.com',
+        role: UserRole.USER,
       });
     });
   });
