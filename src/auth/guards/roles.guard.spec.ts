@@ -75,7 +75,9 @@ describe('RolesGuard', () => {
     });
 
     it('should deny access when user is not provided', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.USER]);
 
       const context = createMockExecutionContext(null);
       const result = await guard.canActivate(context);
@@ -85,7 +87,9 @@ describe('RolesGuard', () => {
     });
 
     it('should deny access when user has no id', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.USER]);
 
       const context = createMockExecutionContext({ email: 'test@test.com' });
       const result = await guard.canActivate(context);
@@ -95,7 +99,9 @@ describe('RolesGuard', () => {
     });
 
     it('should allow access when user has required role (USER)', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.USER]);
 
       const mockUser = { id: 'user1' };
       const mockDbUser = { role: UserRole.USER };
@@ -113,7 +119,9 @@ describe('RolesGuard', () => {
     });
 
     it('should allow access when user has required role (ADMIN)', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.ADMIN]);
 
       const mockUser = { id: 'admin1' };
       const mockDbUser = { role: UserRole.ADMIN };
@@ -131,7 +139,9 @@ describe('RolesGuard', () => {
     });
 
     it('should deny access when user does not have required role', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.ADMIN]);
 
       const mockUser = { id: 'user1' };
       const mockDbUser = { role: UserRole.USER }; // User a le rôle USER mais ADMIN requis
@@ -145,7 +155,9 @@ describe('RolesGuard', () => {
     });
 
     it('should allow access when user has one of multiple required roles', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER, UserRole.ADMIN]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.USER, UserRole.ADMIN]);
 
       const mockUser = { id: 'user1' };
       const mockDbUser = { role: UserRole.USER }; // USER est dans la liste des rôles autorisés
@@ -159,7 +171,9 @@ describe('RolesGuard', () => {
     });
 
     it('should deny access when user is not found in database', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.USER]);
 
       const mockUser = { id: 'nonexistent' };
 
@@ -172,7 +186,9 @@ describe('RolesGuard', () => {
     });
 
     it('should deny access when database query fails', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.USER]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.USER]);
 
       const mockUser = { id: 'user1' };
 
@@ -185,7 +201,9 @@ describe('RolesGuard', () => {
     });
 
     it('should verify real database role not JWT payload role', async () => {
-      jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([UserRole.ADMIN]);
+      jest
+        .spyOn(reflector, 'getAllAndOverride')
+        .mockReturnValue([UserRole.ADMIN]);
 
       const mockUser = {
         id: 'user1',
