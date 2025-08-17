@@ -60,12 +60,10 @@ export class MassageController {
   )
   create(
     @Body() createMassageDto: CreateMassageDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
-    if (!image) {
-      throw new Error('Une image est requise');
-    }
-    return this.massageService.create(createMassageDto, image.filename);
+    const imageName = image ? image.filename : null;
+    return this.massageService.create(createMassageDto, imageName);
   }
 
   @Get('images/:filename')

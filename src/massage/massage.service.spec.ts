@@ -74,6 +74,33 @@ describe('MassageService', () => {
       });
       expect(result).toEqual(expectedMassage);
     });
+
+    it('should create a new massage without image', async () => {
+      const createMassageDto = {
+        title: 'Massage relaxant',
+        description: 'Massage pour se détendre et oublié tous ses soucis',
+        price: 80,
+        duration: 60,
+        position: 1,
+      };
+
+      const expectedMassage = {
+        id: 'massage1',
+        ...createMassageDto,
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      prismaService.massage.create.mockResolvedValue(expectedMassage);
+
+      const result = await service.create(createMassageDto);
+
+      expect(prismaService.massage.create).toHaveBeenCalledWith({
+        data: createMassageDto, // Pas d'image ajoutée si non fournie
+      });
+      expect(result).toEqual(expectedMassage);
+    });
   });
 
   //récupérer la liste complète des massages
