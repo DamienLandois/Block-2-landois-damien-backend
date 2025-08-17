@@ -76,7 +76,6 @@ describe('MassageService', () => {
     });
   });
 
-  
   //récupérer la liste complète des massages
   describe('findAll', () => {
     it('should return all massages ordered by position then by creation date', async () => {
