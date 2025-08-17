@@ -33,6 +33,7 @@ jobs:
       DB_NAME: ${{ secrets.MYSQL_DATABASE }}
       NODE_ENV: test
       PORT: 3000
+      TZ: UTC
       DATABASE_URL: mysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}
       
     steps:
@@ -54,7 +55,7 @@ jobs:
         run: npm run lint
 
       - name: Run unit tests
-        run: npm run test:cov
+        run: npm run test
 
   build-and-push:
     needs: test

@@ -19,6 +19,13 @@ enum UserRole {
   ADMIN
 }
 
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
 model User {
   id        String   @id @default(cuid())
   firstname String?
@@ -29,6 +36,7 @@ model User {
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  bookings  Booking[]
 }
 
 model Massage {
@@ -41,4 +49,32 @@ model Massage {
   position    Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  bookings    Booking[]
+}
+
+model TimeSlot {
+  id        String   @id @default(cuid())
+  startTime DateTime
+  endTime   DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bookings  Booking[]
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  userId      String
+  massageId   String
+  timeSlotId  String
+  status      BookingStatus @default(PENDING)
+  notes       String?       @db.Text
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  massage     Massage  @relation(fields: [massageId], references: [id], onDelete: Cascade)
+  timeSlot    TimeSlot @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
+  
+  @@unique([timeSlotId, massageId])
 }

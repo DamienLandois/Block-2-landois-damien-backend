@@ -1,4 +1,10 @@
-import { IsString, IsNotEmpty, IsNumber, IsPositive, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsNumber,
+  IsPositive,
+  IsOptional,
+} from 'class-validator';
 
 export class CreateMassageDto {
   @IsString()
