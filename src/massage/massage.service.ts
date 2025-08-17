@@ -17,7 +17,9 @@ export class MassageService {
 
   // Récupérer tous les massages triés par position puis par date
   async findAll() {
-    return this.prisma.massage.findMany({ orderBy: [{ position: 'asc' }, { createdAt: 'desc' }] });
+    return this.prisma.massage.findMany({
+      orderBy: [{ position: 'asc' }, { createdAt: 'desc' }],
+    });
   }
 
   async findOne(id: string) {
