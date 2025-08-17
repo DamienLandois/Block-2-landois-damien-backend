@@ -1,0 +1,40 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
+import { compare } from 'bcryptjs';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwt: JwtService,
+  ) {}
+
+  async validateUser(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: email.trim().toLowerCase() },
+      select: {
+        id: true,
+        email: true,
+        firstname: true,
+        name: true,
+        password: true,
+        role: true,
+      },
+    });
+    if (!user?.password) throw new UnauthorizedException('Invalid credentials');
+
+    const ok = await compare(password, user.password);
+    if (!ok) throw new UnauthorizedException('Invalid credentials');
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-assignment
+    const { password: _, ...safe } = user as any;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return safe;
+  }
+
+  async signAccessToken(user: { id: string; email: string; role: string }) {
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    return this.jwt.signAsync(payload);
+  }
+}
