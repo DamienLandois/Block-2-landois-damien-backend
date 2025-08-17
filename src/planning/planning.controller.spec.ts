@@ -39,14 +39,22 @@ describe('PlanningController', () => {
       name: 'Dubois',
       firstname: 'Theo',
       email: 'theo.dubois@hotmail.fr',
+      password: 'hashedPassword',
+      phoneNumber: '+33123456789',
+      role: 'USER' as const,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
     massage: {
       id: 'massage-pierre-chaude',
       title: 'massage pierre chaude',
       description: `massage avec des pierres tout droit sortie d'un volcan en eruption`,
+      image: null,
       price: 110,
       duration: 90,
       position: 1,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     },
   };
 
@@ -134,7 +142,7 @@ describe('PlanningController', () => {
     // Permet de réserver un massage pour un client
     it('allows booking a massage appointment', async () => {
       const req = { user: connectedClient };
-      service.reserverMassage.mockResolvedValue(theoBooking as any);
+      service.reserverMassage.mockResolvedValue(theoBooking);
 
       const result = await controller.prendreRendezVous(bookingRequest, req);
 
@@ -151,7 +159,7 @@ describe('PlanningController', () => {
     it('shows appointments for the connected client', async () => {
       const req = { user: connectedClient };
       const myAppointments = [theoBooking];
-      service.voirMesRendezVous.mockResolvedValue(myAppointments as any);
+      service.voirMesRendezVous.mockResolvedValue(myAppointments);
 
       const result = await controller.voirMesRendezVous(req);
 
@@ -164,7 +172,7 @@ describe('PlanningController', () => {
     // Permet aux admins de voir toutes les réservations
     it('allows admins to see all reservations', async () => {
       const allReservations = [theoBooking];
-      service.voirTousLesRendezVous.mockResolvedValue(allReservations as any);
+      service.voirTousLesRendezVous.mockResolvedValue(allReservations);
 
       const result = await controller.voirToutesLesReservations();
 
@@ -181,7 +189,7 @@ describe('PlanningController', () => {
     // Permet de modifier les commentaires d'un rendez-vous
     it('allows modifying appointment comments', async () => {
       const updatedBooking = { ...theoBooking, ...bookingUpdate };
-      service.modifierReservation.mockResolvedValue(updatedBooking as any);
+      service.modifierReservation.mockResolvedValue(updatedBooking);
 
       const result = await controller.modifierRendezVous(
         'booking-theo-456',
@@ -199,19 +207,15 @@ describe('PlanningController', () => {
   describe('annulerRendezVous', () => {
     // Traite l'annulation d'un rendez-vous
     it('processes appointment cancellation', async () => {
-      const cancellationConfirmation = {
-        message: 'Vue',
-      };
-      service.annulerReservation.mockResolvedValue(
-        cancellationConfirmation as any,
-      );
+      const cancelledBooking = { ...theoBooking, status: 'CANCELLED' as const };
+      service.annulerReservation.mockResolvedValue(cancelledBooking);
 
       const result = await controller.annulerRendezVous('booking-theo-456');
 
       expect(service.annulerReservation).toHaveBeenCalledWith(
         'booking-theo-456',
       );
-      expect(result).toEqual(cancellationConfirmation);
+      expect(result).toEqual(cancelledBooking);
     });
   });
 
