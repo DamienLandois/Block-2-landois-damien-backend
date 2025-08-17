@@ -6,11 +6,11 @@ import { CreateMassageDto, UpdateMassageDto } from './dto';
 export class MassageService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createMassageDto: CreateMassageDto, imageName: string) {
+  async create(createMassageDto: CreateMassageDto, imageName?: string | null) {
     return this.prisma.massage.create({
       data: {
         ...createMassageDto,
-        image: imageName,
+        image: imageName || null,
       },
     });
   }

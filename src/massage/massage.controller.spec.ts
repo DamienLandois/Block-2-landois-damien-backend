@@ -70,7 +70,7 @@ describe('MassageController', () => {
 
   // Tests pour la création d'un massage
   describe('create', () => {
-    it('should create a massage', async () => {
+    it('should create a massage with image', async () => {
       const createMassageDto: CreateMassageDto = {
         title: 'Massage relaxant',
         description: 'Un massage apaisant',
@@ -107,6 +107,41 @@ describe('MassageController', () => {
         createMassageDto,
         'img-123456789.jpg',
       );
+      expect(result).toEqual(expectedMassage);
+    });
+
+    it('should create a massage without image', async () => {
+      const createMassageDto: CreateMassageDto = {
+        title: 'Massage relaxant',
+        description: 'Massage pour se détendre et oublié tous ses soucis',
+        price: 80,
+        duration: 60,
+        position: 1,
+      };
+
+      // Pas de fichier image uploadé
+      const mockFile = undefined;
+
+      service.create.mockResolvedValue({
+        id: 'massage1',
+        ...createMassageDto,
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        position: 1,
+      });
+
+      const expectedMassage = {
+        id: 'massage1',
+        ...createMassageDto,
+        image: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const result = await controller.create(createMassageDto, mockFile);
+
+      expect(service.create).toHaveBeenCalledWith(createMassageDto, null);
       expect(result).toEqual(expectedMassage);
     });
   });
