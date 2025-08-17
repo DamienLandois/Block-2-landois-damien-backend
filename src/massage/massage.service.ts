@@ -7,11 +7,13 @@ export class MassageService {
   constructor(private prisma: PrismaService) {}
 
   async create(createMassageDto: CreateMassageDto, imageName?: string | null) {
+    // Construction conditionnelle des données : ajout d'image seulement si fournie
+    const data = imageName
+      ? { ...createMassageDto, image: imageName }
+      : createMassageDto;
+
     return this.prisma.massage.create({
-      data: {
-        ...createMassageDto,
-        image: imageName || null,
-      },
+      data: data,
     });
   }
 

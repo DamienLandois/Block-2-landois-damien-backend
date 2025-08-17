@@ -97,10 +97,7 @@ describe('MassageService', () => {
       const result = await service.create(createMassageDto);
 
       expect(prismaService.massage.create).toHaveBeenCalledWith({
-        data: {
-          ...createMassageDto,
-          image: null,
-        },
+        data: createMassageDto, // Pas d'image ajoutée si non fournie
       });
       expect(result).toEqual(expectedMassage);
     });
