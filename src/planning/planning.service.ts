@@ -69,7 +69,7 @@ export class PlanningService {
         bookings: {
           include: {
             user: { select: { firstname: true, name: true, email: true } },
-            massage: { select: { title: true, duration: true } },
+            massage: { select: { name: true, duration: true } },
           },
         },
       },
@@ -85,6 +85,7 @@ export class PlanningService {
     const {
       massageId: idMassage,
       timeSlotId: idCreneau,
+      startTime: heureDebutSouhaitee,
       notes: commentaires,
     } = donneesReservation;
 
@@ -101,8 +102,9 @@ export class PlanningService {
       where: { id: idCreneau },
       include: {
         bookings: {
-          where: { status: { not: 'CANCELLED' } },
-          include: { massage: true },
+          include: {
+            massage: true,
+          },
         },
       },
     });
@@ -111,39 +113,68 @@ export class PlanningService {
       throw new NotFoundException("Ce créneau n'est pas disponible");
     }
 
-    // On vérifie que le massage peut tenir dans le créneau
-    const dureeCreneauEnMinutes =
-      (creneauChoisi.endTime.getTime() - creneauChoisi.startTime.getTime()) /
-      (1000 * 60);
-    if (massage.duration > dureeCreneauEnMinutes) {
+    // Conversion des heures en objets Date
+    const heureDebut = new Date(heureDebutSouhaitee);
+    const heureFin = new Date(heureDebut.getTime() + massage.duration * 60000);
+    const heureDebutCreneau = creneauChoisi.startTime;
+    const heureFinCreneau = creneauChoisi.endTime;
+
+    // Vérification que le massage est dans les limites du créneau
+    if (heureDebut < heureDebutCreneau) {
       throw new BadRequestException(
-        `Ce massage dure ${massage.duration} minutes mais le créneau ne fait que ${dureeCreneauEnMinutes} minutes`,
+        `Le massage ne peut pas commencer avant ${heureDebutCreneau.toISOString()}`,
       );
     }
 
-    // On vérifie qu'il n'y a pas de conflit avec les autres réservations
+    if (heureFin > heureFinCreneau) {
+      throw new BadRequestException(
+        `Le massage se terminerait à ${heureFin.toISOString()} mais le créneau se termine à ${heureFinCreneau.toISOString()}`,
+      );
+    }
+
+    // Vérification des conflits avec les autres réservations
     const reservationsActives = creneauChoisi.bookings;
 
-    // On calcule le temps total déjà pris (massages + pauses de 30min)
-    let tempsTotalPris = 0;
     for (const autreReservation of reservationsActives) {
-      tempsTotalPris += autreReservation.massage.duration + 30; // 30 minutes de pause obligatoire
-    }
+      // Utilisation des heures exactes de la réservation
+      const autreDebut = autreReservation.startTime;
+      const autreFin = autreReservation.endTime;
 
-    // On enlève les 30 dernières minutes (pas de pause après le dernier massage)
-    if (reservationsActives.length > 0) {
-      tempsTotalPris -= 30;
-    }
+      if (!autreDebut || !autreFin) {
+        throw new Error('Réservation sans heures définies trouvée');
+      }
 
-    // On vérifie s'il reste assez de place pour notre nouveau massage
-    const tempsRestant = dureeCreneauEnMinutes - tempsTotalPris;
-    const tempsNecessaire =
-      massage.duration + (reservationsActives.length > 0 ? 30 : 0); // +30min de pause si pas le premier
+      // Vérification du chevauchement direct (sans pause)
+      const chevauchementDirect =
+        heureDebut < autreFin && heureFin > autreDebut;
 
-    if (tempsNecessaire > tempsRestant) {
-      throw new ConflictException(
-        'Pas assez de temps libre dans ce créneau (il faut 30 minutes de pause entre les massages)',
-      );
+      if (chevauchementDirect) {
+        // Il y a chevauchement, on vérifie s'il y a assez de pause entre les massages
+
+        if (heureFin <= autreDebut) {
+          // Notre massage se termine avant l'autre commence
+          const pauseDisponible =
+            (autreDebut.getTime() - heureFin.getTime()) / (1000 * 60);
+          if (pauseDisponible < 30) {
+            throw new ConflictException(
+              `Pas assez de pause entre les massages. Il faut 30 minutes de pause minimum, vous n'avez que ${Math.round(pauseDisponible)} minutes.`,
+            );
+          }
+        } else if (heureDebut >= autreFin) {
+          // Notre massage commence après que l'autre se termine
+          const pauseDisponible = (heureDebut.getTime() - autreFin.getTime()) / (1000 * 60);
+          if (pauseDisponible < 30) {
+            throw new ConflictException(
+              `Pas assez de pause entre les massages. Il faut 30 minutes de pause minimum, vous n'avez que ${Math.round(pauseDisponible)} minutes.`,
+            );
+          }
+        } else {
+          // Chevauchement complet = conflit
+          throw new ConflictException(
+            `Conflit d'horaire: ce créneau horaire est déjà occupé par un autre massage.`,
+          );
+        }
+      }
     }
 
     // Si tout va bien, on peut créer la réservation
@@ -152,23 +183,33 @@ export class PlanningService {
         userId: idUtilisateur,
         massageId: idMassage,
         timeSlotId: idCreneau,
+        startTime: heureDebut,
+        endTime: heureFin,
         notes: commentaires,
       },
-      include: { user: true, massage: true, timeSlot: true },
     });
+
+    // On récupère les infos complètes pour l'email
+    const utilisateur = await this.prisma.user.findUnique({
+      where: { id: idUtilisateur },
+    });
+
+    if (!utilisateur) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
 
     // Envoi automatique des emails de confirmation
     try {
       const infosReservation = {
-        prenomClient: nouvelleReservation.user.firstname || 'Client',
-        nomClient: nouvelleReservation.user.name || '',
-        emailClient: nouvelleReservation.user.email,
-        telephoneClient: nouvelleReservation.user.phoneNumber || undefined,
-        nomMassage: nouvelleReservation.massage.title,
-        dureeMassage: nouvelleReservation.massage.duration,
-        prixMassage: nouvelleReservation.massage.price,
-        dateDebut: nouvelleReservation.timeSlot.startTime,
-        dateFin: nouvelleReservation.timeSlot.endTime,
+        prenomClient: utilisateur.firstname || 'Client',
+        nomClient: utilisateur.name || '',
+        emailClient: utilisateur.email,
+        telephoneClient: utilisateur.phoneNumber || undefined,
+        nomMassage: massage.name,
+        dureeMassage: massage.duration,
+        prixMassage: massage.price,
+        dateDebut: heureDebut, // Heure précise du massage
+        dateFin: heureFin, // Heure de fin précise du massage
         commentaires: nouvelleReservation.notes || undefined,
       };
 
@@ -262,7 +303,7 @@ export class PlanningService {
         nomClient: reservation.user.name || '',
         emailClient: reservation.user.email,
         telephoneClient: reservation.user.phoneNumber || undefined,
-        nomMassage: reservation.massage.title,
+        nomMassage: reservation.massage.name,
         dureeMassage: reservation.massage.duration,
         prixMassage: reservation.massage.price,
         dateDebut: reservation.timeSlot.startTime,
@@ -315,7 +356,7 @@ export class PlanningService {
         bookings: {
           include: {
             user: { select: { firstname: true, name: true } },
-            massage: { select: { title: true } },
+            massage: { select: { name: true } },
           },
         },
       },

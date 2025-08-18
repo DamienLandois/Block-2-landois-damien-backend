@@ -49,7 +49,7 @@ export class UserService {
     return users;
   }
 
-  async createUser(data: CreateUserDto) {
+  async createUser(data: CreateUserDto, role: UserRole = UserRole.USER) {
     const email = data.email.trim().toLowerCase();
     const passwordHash = await hash(data.password, 11);
 
@@ -61,7 +61,7 @@ export class UserService {
           firstname: data.firstname ?? null,
           name: data.name ?? null,
           phoneNumber: data.phoneNumber ?? null,
-          role: data.role ?? UserRole.USER,
+          role: role,
         },
         select: {
           id: true,
@@ -123,6 +123,32 @@ export class UserService {
         }
         if (error.code === 'P2025') {
           // P2025 est le code renvoyé par prisma quand l'enregistrement à mettre à jour est introuvable
+          throw new NotFoundException('User not found');
+        }
+      }
+      throw error;
+    }
+  }
+
+  async updateUserRole(userId: string, role: UserRole) {
+    try {
+      return await this.prisma.user.update({
+        where: { id: userId },
+        data: { role },
+        select: {
+          id: true,
+          email: true,
+          firstname: true,
+          name: true,
+          phoneNumber: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
           throw new NotFoundException('User not found');
         }
       }
