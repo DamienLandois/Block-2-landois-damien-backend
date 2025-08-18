@@ -23,7 +23,7 @@ model User {
 
 model Massage {
   id          String    @id @default(cuid())
-  title       String
+  name        String
   description String    @db.Text
   image       String?
   price       Float
@@ -49,6 +49,8 @@ model Booking {
   userId     String
   massageId  String
   timeSlotId String
+  startTime  DateTime
+  endTime    DateTime
   status     BookingStatus @default(PENDING)
   notes      String?       @db.Text
   createdAt  DateTime      @default(now())
@@ -57,7 +59,6 @@ model Booking {
   timeSlot   TimeSlot      @relation(fields: [timeSlotId], references: [id], onDelete: Cascade)
   user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([timeSlotId, massageId])
   @@index([massageId], map: "Booking_massageId_fkey")
   @@index([userId], map: "Booking_userId_fkey")
 }

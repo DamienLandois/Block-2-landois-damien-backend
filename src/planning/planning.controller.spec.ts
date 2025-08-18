@@ -29,6 +29,8 @@ describe('PlanningController', () => {
     userId: 'user-theo-789',
     massageId: 'massage-pierre-chaude',
     timeSlotId: 'slot-140823-452',
+    startTime: new Date('2025-08-23T14:45:00.000Z'),
+    endTime: new Date('2025-08-23T16:15:00.000Z'),
     status: 'CONFIRMED' as const,
     notes: 'Avec du métal en arriere fond',
     createdAt: new Date(),
@@ -47,7 +49,7 @@ describe('PlanningController', () => {
     },
     massage: {
       id: 'massage-pierre-chaude',
-      title: 'massage pierre chaude',
+      name: 'massage pierre chaude',
       description: `massage avec des pierres tout droit sortie d'un volcan en eruption`,
       image: null,
       price: 110,
@@ -136,6 +138,7 @@ describe('PlanningController', () => {
     const bookingRequest: CreateBookingDto = {
       massageId: 'massage-pierre-chaude',
       timeSlotId: 'slot-140823-452',
+      startTime: '2025-08-23T14:45:00.000Z',
       notes: 'pas trop chaude non plus',
     };
 
@@ -188,7 +191,10 @@ describe('PlanningController', () => {
 
     // Permet de modifier les commentaires d'un rendez-vous
     it('allows modifying appointment comments', async () => {
-      const updatedBooking = { ...theoBooking, ...bookingUpdate };
+      const updatedBooking = {
+        ...theoBooking,
+        notes: bookingUpdate.notes || theoBooking.notes,
+      };
       service.modifierReservation.mockResolvedValue(updatedBooking);
 
       const result = await controller.modifierRendezVous(

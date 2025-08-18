@@ -172,10 +172,10 @@ describe('UserController', () => {
 
       expect(result).toEqual(createdUser);
       expect(userService.createUser).toHaveBeenCalledTimes(1);
-      expect(userService.createUser).toHaveBeenCalledWith({
-        ...createUserDto,
-        role: UserRole.USER,
-      });
+      expect(userService.createUser).toHaveBeenCalledWith(
+        createUserDto,
+        UserRole.USER,
+      );
     });
 
     // Mock le service, appelle controller.createUser() avec seulement les champs requis, vérifie qu'on reçoit l'utilisateur
@@ -197,10 +197,10 @@ describe('UserController', () => {
       const result = await controller.createUser(createUserDto);
 
       expect(result).toEqual(createdUser);
-      expect(userService.createUser).toHaveBeenCalledWith({
-        ...createUserDto,
-        role: UserRole.USER,
-      });
+      expect(userService.createUser).toHaveBeenCalledWith(
+        createUserDto,
+        UserRole.USER,
+      );
     });
   });
 
