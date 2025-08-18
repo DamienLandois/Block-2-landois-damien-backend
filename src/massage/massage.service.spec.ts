@@ -45,7 +45,7 @@ describe('MassageService', () => {
   describe('create', () => {
     it('should create a new massage', async () => {
       const createMassageDto: CreateMassageDto = {
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Un massage pour se détendre',
         price: 80,
         duration: 60,
@@ -77,7 +77,7 @@ describe('MassageService', () => {
 
     it('should create a new massage without image', async () => {
       const createMassageDto = {
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Massage pour se détendre et oublié tous ses soucis',
         price: 80,
         duration: 60,
@@ -109,7 +109,7 @@ describe('MassageService', () => {
       const expectedMassages = [
         {
           id: 'massage1',
-          title: 'Massage relaxant',
+          name: 'Massage relaxant',
           description: 'Description',
           image: 'https://example.com/image.jpg',
           price: 80,
@@ -137,7 +137,7 @@ describe('MassageService', () => {
       const massageId = 'massage1';
       const expectedMassage = {
         id: massageId,
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Description',
         image: 'https://example.com/image.jpg',
         price: 80,
@@ -173,13 +173,13 @@ describe('MassageService', () => {
     it('should update a massage', async () => {
       const massageId = 'massage1';
       const updateMassageDto: UpdateMassageDto = {
-        title: 'Massage relaxant mis à jour',
+        name: 'Massage relaxant mis à jour',
         price: 90,
       };
 
       const existingMassage = {
         id: massageId,
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Description',
         image: 'https://example.com/image.jpg',
         price: 80,
@@ -215,7 +215,7 @@ describe('MassageService', () => {
     //erreur lors de la modification d'un massage inexistant
     it('should throw NotFoundException when updating non-existent massage', async () => {
       const massageId = 'nonexistent';
-      const updateMassageDto: UpdateMassageDto = { title: 'New title' };
+      const updateMassageDto: UpdateMassageDto = { name: 'New title' };
 
       prismaService.massage.findUnique.mockResolvedValue(null);
 
@@ -231,7 +231,7 @@ describe('MassageService', () => {
       const massageId = 'massage1';
       const existingMassage = {
         id: massageId,
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Description',
         image: 'https://example.com/image.jpg',
         price: 80,

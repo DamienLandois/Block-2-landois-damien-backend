@@ -4,9 +4,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma
 RUN npm ci
-RUN npx prisma generate
 
 COPY . .
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:22-alpine

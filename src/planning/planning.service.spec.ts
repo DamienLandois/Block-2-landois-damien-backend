@@ -129,6 +129,7 @@ describe('PlanningService', () => {
     const bookingRequest: CreateBookingDto = {
       massageId: 'massage-detente-654',
       timeSlotId: 'slot-matin-254',
+      startTime: '2025-08-22T09:30:00.000Z',
       notes: 'mal de dos, jpp',
     };
 

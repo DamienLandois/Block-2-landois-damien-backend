@@ -10,7 +10,17 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  ParseFilePipeBuilder,
+  HttpStatus,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
@@ -20,6 +30,8 @@ import { CreateMassageDto, UpdateMassageDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { AdminOnly } from '../auth/decorators/roles.decorator';
+import { ApiOptionalFile } from './decorators/api-optional-file.decorator';
+import { EmptyStringToNullInterceptor } from './interceptors/empty-string-to-null.interceptor';
 
 // Configuration pour l'upload d'images
 const imageStorage = diskStorage({
@@ -44,6 +56,7 @@ const imageFilter = (
   }
 };
 
+@ApiTags('Massages')
 @Controller('massages')
 export class MassageController {
   constructor(private readonly massageService: MassageService) {}
@@ -52,31 +65,76 @@ export class MassageController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
   @UseInterceptors(
+    EmptyStringToNullInterceptor,
     FileInterceptor('image', {
       storage: imageStorage,
       fileFilter: imageFilter,
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
+  @ApiOperation({ summary: 'Créer un nouveau massage' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @ApiOptionalFile('image')
+  @ApiResponse({ status: 201, description: 'Massage créé avec succès' })
+  @ApiResponse({ status: 401, description: 'Non autorisé - Token JWT requis' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Droits administrateur requis',
+  })
   create(
     @Body() createMassageDto: CreateMassageDto,
-    @UploadedFile() image?: Express.Multer.File,
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: /(jpg|jpeg|png|gif)$/,
+        })
+        .addMaxSizeValidator({
+          maxSize: 5 * 1024 * 1024, // 5MB
+        })
+        .build({
+          fileIsRequired: false,
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    image?: Express.Multer.File,
   ) {
     const imageName = image ? image.filename : null;
     return this.massageService.create(createMassageDto, imageName);
   }
 
   @Get('images/:filename')
+  @ApiOperation({ summary: 'Récupérer une image de massage' })
+  @ApiParam({
+    name: 'filename',
+    description: 'Nom du fichier image',
+    type: 'string',
+  })
+  @ApiResponse({ status: 200, description: 'Image retournée avec succès' })
+  @ApiResponse({ status: 404, description: 'Image non trouvée' })
   getImage(@Param('filename') filename: string, @Res() res: Response) {
     return res.sendFile(join(process.cwd(), 'uploads/images', filename));
   }
 
   @Get()
+  @ApiOperation({ summary: 'Récupérer tous les massages' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des massages retournée avec succès',
+  })
   findAll() {
     return this.massageService.findAll();
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Récupérer un massage par son ID' })
+  @ApiParam({
+    name: 'id',
+    description: 'ID du massage',
+    type: 'string',
+  })
+  @ApiResponse({ status: 200, description: 'Massage trouvé' })
+  @ApiResponse({ status: 404, description: 'Massage non trouvé' })
   findOne(@Param('id') id: string) {
     return this.massageService.findOne(id);
   }
@@ -85,12 +143,29 @@ export class MassageController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
   @UseInterceptors(
+    EmptyStringToNullInterceptor,
     FileInterceptor('image', {
       storage: imageStorage,
       fileFilter: imageFilter,
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
+  @ApiOperation({ summary: 'Modifier un massage' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBearerAuth()
+  @ApiParam({
+    name: 'id',
+    description: 'ID du massage à modifier',
+    type: 'string',
+  })
+  @ApiOptionalFile('image')
+  @ApiResponse({ status: 200, description: 'Massage modifié avec succès' })
+  @ApiResponse({ status: 401, description: 'Non autorisé - Token JWT requis' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Droits administrateur requis',
+  })
+  @ApiResponse({ status: 404, description: 'Massage non trouvé' })
   update(
     @Param('id') id: string,
     @Body() updateMassageDto: UpdateMassageDto,
@@ -104,6 +179,20 @@ export class MassageController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
+  @ApiOperation({ summary: 'Supprimer un massage' })
+  @ApiBearerAuth()
+  @ApiParam({
+    name: 'id',
+    description: 'ID du massage à supprimer',
+    type: 'string',
+  })
+  @ApiResponse({ status: 200, description: 'Massage supprimé avec succès' })
+  @ApiResponse({ status: 401, description: 'Non autorisé - Token JWT requis' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Droits administrateur requis',
+  })
+  @ApiResponse({ status: 404, description: 'Massage non trouvé' })
   delete(@Param('id') id: string) {
     return this.massageService.delete(id);
   }

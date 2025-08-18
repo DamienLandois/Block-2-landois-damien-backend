@@ -72,7 +72,7 @@ describe('MassageController', () => {
   describe('create', () => {
     it('should create a massage with image', async () => {
       const createMassageDto: CreateMassageDto = {
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Un massage apaisant',
         price: 80,
         duration: 60,
@@ -112,7 +112,7 @@ describe('MassageController', () => {
 
     it('should create a massage without image', async () => {
       const createMassageDto: CreateMassageDto = {
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Massage pour se détendre et oublié tous ses soucis',
         price: 80,
         duration: 60,
@@ -152,7 +152,7 @@ describe('MassageController', () => {
       const expectedMassages = [
         {
           id: 'massage1',
-          title: 'Massage relaxant',
+          name: 'Massage relaxant',
           description: 'Description',
           image: 'img-123456789.jpg',
           price: 80,
@@ -179,7 +179,7 @@ describe('MassageController', () => {
       const massageId = 'massage1';
       const expectedMassage = {
         id: massageId,
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Description',
         image: 'img-123456789.jpg',
         price: 80,
@@ -204,14 +204,14 @@ describe('MassageController', () => {
     it('should update a massage', async () => {
       const massageId = 'massage1';
       const updateMassageDto: UpdateMassageDto = {
-        title: 'Massage relaxant mis à jour',
+        name: 'Massage relaxant mis à jour',
         price: 90,
       };
 
       // Massage attendu après modification
       const expectedMassage = {
         id: massageId,
-        title: 'Massage relaxant mis à jour',
+        name: 'Massage relaxant mis à jour',
         description: 'Description',
         image: 'img-123456789.jpg',
         price: 90,
@@ -242,7 +242,7 @@ describe('MassageController', () => {
       const massageId = 'massage1';
       const expectedMassage = {
         id: massageId,
-        title: 'Massage relaxant',
+        name: 'Massage relaxant',
         description: 'Description',
         image: 'img-123456789.jpg',
         price: 80,
