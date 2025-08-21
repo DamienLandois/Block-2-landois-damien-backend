@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EmailService } from './email.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { AppLoggerService } from '../common/logger/logger.service';
 import { UserRole } from '../user/enums/user-role.enum';
 
 describe('EmailService', () => {
@@ -34,6 +35,14 @@ describe('EmailService', () => {
       },
     };
 
+    const mockLoggerService = {
+      log: jest.fn(),
+      error: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+      verbose: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         EmailService,
@@ -44,6 +53,10 @@ describe('EmailService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: AppLoggerService,
+          useValue: mockLoggerService,
         },
       ],
     }).compile();
@@ -173,16 +186,19 @@ describe('EmailService', () => {
     // Teste le cas où aucun admin n'est configuré
     it('should do nothing when no admins are configured', async () => {
       (prismaService.user.findMany as jest.Mock).mockResolvedValue([]);
-      const consoleWarn = jest.spyOn(console, 'warn').mockImplementation();
+      const loggerWarnSpy = jest
+        .spyOn(service['logger'], 'warn')
+        .mockImplementation();
 
       await service.notifyAdmins(carlaBooking);
 
-      expect(consoleWarn).toHaveBeenCalledWith(
-        "Aucun administrateur trouvé pour l'envoi de notifications",
+      expect(loggerWarnSpy).toHaveBeenCalledWith(
+        'Aucun administrateur trouve pour notifications',
+        'EmailService',
       );
       expect(mailerService.sendMail).not.toHaveBeenCalled();
 
-      consoleWarn.mockRestore();
+      loggerWarnSpy.mockRestore();
     });
 
     // Teste des erreurs de connexion à la base
@@ -191,17 +207,19 @@ describe('EmailService', () => {
       (prismaService.user.findMany as jest.Mock).mockRejectedValue(
         connectionError,
       );
-      const consoleError = jest.spyOn(console, 'error').mockImplementation();
+      const loggerErrorSpy = jest
+        .spyOn(service['logger'], 'error')
+        .mockImplementation();
 
       await service.notifyAdmins(carlaBooking);
 
-      expect(consoleError).toHaveBeenCalledWith(
-        'Erreur lors de la récupération des emails admins:',
-        connectionError,
+      expect(loggerErrorSpy).toHaveBeenCalledWith(
+        'Erreur lors de recuperation des emails admins',
+        'EmailService',
       );
       expect(mailerService.sendMail).not.toHaveBeenCalled();
 
-      consoleError.mockRestore();
+      loggerErrorSpy.mockRestore();
     });
   });
 

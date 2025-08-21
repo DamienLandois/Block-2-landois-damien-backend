@@ -40,11 +40,14 @@ export class PlanningController {
   @Post('creneaux')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
-  @ApiOperation({ summary: 'Créer un nouveau créneau horaire' })
+  @ApiOperation({ summary: 'Créer un nouveau créneau horaire  (Admin)' })
   @ApiBody({ type: CreateTimeSlotDto })
   @ApiResponse({ status: 201, description: 'Créneau créé avec succès' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès interdit - Admin uniquement' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès interdit - Admin uniquement',
+  })
   @ApiBearerAuth()
   ajouterCreneau(@Body() donneesTimeslot: CreateTimeSlotDto) {
     return this.planningService.creerNouveauCreneau(donneesTimeslot);
@@ -52,7 +55,10 @@ export class PlanningController {
 
   @Get('creneaux')
   @ApiOperation({ summary: 'Obtenir tous les créneaux horaires' })
-  @ApiResponse({ status: 200, description: 'Liste des créneaux récupérée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des créneaux récupérée avec succès',
+  })
   voirTousLesCreneaux() {
     return this.planningService.obtenirTousLesCreneaux();
   }
@@ -60,12 +66,15 @@ export class PlanningController {
   @Put('creneaux/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
-  @ApiOperation({ summary: 'Modifier un créneau horaire existant' })
+  @ApiOperation({ summary: 'Modifier un créneau horaire existant  (Admin)' })
   @ApiParam({ name: 'id', description: 'ID du créneau à modifier' })
   @ApiBody({ type: UpdateTimeSlotDto })
   @ApiResponse({ status: 200, description: 'Créneau modifié avec succès' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès interdit - Admin uniquement' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès interdit - Admin uniquement',
+  })
   @ApiResponse({ status: 404, description: 'Créneau non trouvé' })
   @ApiBearerAuth()
   modifierCreneau(
@@ -78,11 +87,14 @@ export class PlanningController {
   @Delete('creneaux/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
-  @ApiOperation({ summary: 'Supprimer un créneau horaire' })
+  @ApiOperation({ summary: 'Supprimer un créneau horaire  (Admin)' })
   @ApiParam({ name: 'id', description: 'ID du créneau à supprimer' })
   @ApiResponse({ status: 200, description: 'Créneau supprimé avec succès' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès interdit - Admin uniquement' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès interdit - Admin uniquement',
+  })
   @ApiResponse({ status: 404, description: 'Créneau non trouvé' })
   @ApiBearerAuth()
   supprimerCreneau(@Param('id') idCreneau: string) {
@@ -98,7 +110,10 @@ export class PlanningController {
   @ApiBody({ type: CreateBookingDto })
   @ApiResponse({ status: 201, description: 'Réservation créée avec succès' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 400, description: 'Données invalides ou créneau indisponible' })
+  @ApiResponse({
+    status: 400,
+    description: 'Données invalides ou créneau indisponible',
+  })
   @ApiBearerAuth()
   prendreRendezVous(
     @Body() donneesReservation: CreateBookingDto,
@@ -115,7 +130,10 @@ export class PlanningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @UserOrAdmin()
   @ApiOperation({ summary: 'Obtenir mes rendez-vous' })
-  @ApiResponse({ status: 200, description: 'Liste des rendez-vous de l\'utilisateur récupérée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: "Liste des rendez-vous de l'utilisateur récupérée avec succès",
+  })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
   @ApiBearerAuth()
   voirMesRendezVous(@Req() req: UtilisateurConnecte) {
@@ -127,9 +145,15 @@ export class PlanningController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
   @ApiOperation({ summary: 'Obtenir toutes les réservations (Admin)' })
-  @ApiResponse({ status: 200, description: 'Liste de toutes les réservations récupérée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste de toutes les réservations récupérée avec succès',
+  })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès interdit - Admin uniquement' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès interdit - Admin uniquement',
+  })
   @ApiBearerAuth()
   voirToutesLesReservations() {
     return this.planningService.voirTousLesRendezVous();
@@ -173,9 +197,15 @@ export class PlanningController {
   @AdminOnly()
   @ApiOperation({ summary: 'Supprimer définitivement une réservation (Admin)' })
   @ApiParam({ name: 'id', description: 'ID de la réservation à supprimer' })
-  @ApiResponse({ status: 200, description: 'Réservation supprimée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Réservation supprimée avec succès',
+  })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
-  @ApiResponse({ status: 403, description: 'Accès interdit - Admin uniquement' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès interdit - Admin uniquement',
+  })
   @ApiResponse({ status: 404, description: 'Réservation non trouvée' })
   @ApiBearerAuth()
   supprimerReservation(@Param('id') idReservation: string) {
