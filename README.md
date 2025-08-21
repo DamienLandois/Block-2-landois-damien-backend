@@ -37,6 +37,12 @@ npm run start
 
 Visit: [https://github.com/DamienLandois/documentation-bloc-2-landois-damien](https://github.com/DamienLandois/documentation-bloc-2-landois-damien)
 
+```bash
+#pour lancer la documentation
+npm start
+```
+
+
 ## 🛠️ Available Scripts
 
 ```bash
