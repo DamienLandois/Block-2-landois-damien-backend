@@ -141,3 +141,4 @@ jobs:
           echo "  - ghcr.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):latest"
           echo "  - ghcr.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):${{ steps.version.outputs.version_number }}"
 
+#test v1.1
