@@ -34,8 +34,15 @@ npm run start
 **Note:** This option starts the API server only. You'll need to configure your own database connection.
 
 ## 📖 Documentation
+Visit: https://documentation-bloc-2-landois-damien-henna.vercel.app/ Documentation online.
 
-Visit: [https://github.com/DamienLandois/documentation-bloc-2-landois-damien](https://github.com/DamienLandois/documentation-bloc-2-landois-damien)
+Visit: [https://github.com/DamienLandois/documentation-bloc-2-landois-damien](https://github.com/DamienLandois/documentation-bloc-2-landois-damien) for deploy the doc on local.
+
+```bash
+#pour lancer la documentation
+npm start
+```
+
 
 ## 🛠️ Available Scripts
 
