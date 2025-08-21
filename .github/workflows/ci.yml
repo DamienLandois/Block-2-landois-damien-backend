@@ -34,6 +34,7 @@ jobs:
       NODE_ENV: test
       PORT: 3000
       TZ: UTC
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
       DATABASE_URL: mysql://${{ secrets.MYSQL_USER }}:${{ secrets.MYSQL_PASSWORD }}@127.0.0.1:3306/${{ secrets.MYSQL_DATABASE }}
       
     steps:
@@ -51,11 +52,18 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate
 
+      - name: Run database migrations
+        run: npx prisma migrate deploy
+
       - name: Run linter
         run: npm run lint
 
       - name: Run unit tests
         run: npm run test
+
+      - name: Run e2e tests
+        run: npm run test:e2e
+
 
   build-and-push:
     needs: test
@@ -65,6 +73,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup Docker for GitHub Container Registry
         uses: docker/login-action@v2
@@ -72,16 +82,62 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set lowercase image name
+
+      - name: Generate version number
+        id: version
         run: |
-          IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY,,}:latest"
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+          LATEST_TAG=$(git tag -l "v*.*" | sort -V | tail -n1)
+          
+          if [ -z "$LATEST_TAG" ]; then
+            NEW_VERSION="1.0"
+          else
+            CURRENT_VERSION=${LATEST_TAG#v}
+            MAJOR=$(echo $CURRENT_VERSION | cut -d. -f1)
+            MINOR=$(echo $CURRENT_VERSION | cut -d. -f2)
+            
+            NEW_MINOR=$((MINOR + 1))
+            NEW_VERSION="${MAJOR}.${NEW_MINOR}"
+          fi
+          
+          echo "new_version=v${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_number=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "🏷️ Nouvelle version: v${NEW_VERSION}"
+
+      - name: Create and push new tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git tag ${{ steps.version.outputs.new_version }}
+          git push origin ${{ steps.version.outputs.new_version }}
+
+      - name: Set image names
+        run: |
+          REPO_LOWER=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')
+          BASE_IMAGE="ghcr.io/${REPO_LOWER}"
+          
+          echo "IMAGE_LATEST=${BASE_IMAGE}:latest" >> $GITHUB_ENV
+          echo "IMAGE_VERSIONED=${BASE_IMAGE}:${{ steps.version.outputs.version_number }}" >> $GITHUB_ENV
+          echo "BASE_IMAGE=${BASE_IMAGE}" >> $GITHUB_ENV
 
       - name: Build Docker image
         run: |
-          docker build -t $IMAGE_NAME .
+          echo "🐳 Construction de l'image Docker..."
+          docker build -t $IMAGE_LATEST -t $IMAGE_VERSIONED .
+          echo "✅ Images construites:"
+          echo "  - $IMAGE_LATEST"
+          echo "  - $IMAGE_VERSIONED"
 
-      - name: Push Docker image
+      - name: Push Docker images
         run: |
-          docker push $IMAGE_NAME
+          echo "📤 Publication des images..."
+
+          docker push $IMAGE_LATEST
+          echo "✅ Image 'latest' publiée"
+
+          docker push $IMAGE_VERSIONED
+          echo "✅ Image 'v${{ steps.version.outputs.version_number }}' publiée"
+          
+          echo "🎉 Toutes les images sont disponibles:"
+          echo "  - ghcr.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):latest"
+          echo "  - ghcr.io/$(echo ${GITHUB_REPOSITORY} | tr '[:upper:]' '[:lower:]'):${{ steps.version.outputs.version_number }}"
 

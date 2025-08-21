@@ -72,7 +72,7 @@ export class MassageController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  @ApiOperation({ summary: 'Créer un nouveau massage' })
+  @ApiOperation({ summary: 'Créer un nouveau massage  (Admin)' })
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
   @ApiOptionalFile('image')
@@ -150,7 +150,7 @@ export class MassageController {
       limits: { fileSize: 5 * 1024 * 1024 },
     }),
   )
-  @ApiOperation({ summary: 'Modifier un massage' })
+  @ApiOperation({ summary: 'Modifier un massage  (Admin)' })
   @ApiConsumes('multipart/form-data')
   @ApiBearerAuth()
   @ApiParam({
@@ -179,7 +179,7 @@ export class MassageController {
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @AdminOnly()
-  @ApiOperation({ summary: 'Supprimer un massage' })
+  @ApiOperation({ summary: 'Supprimer un massage  (Admin)' })
   @ApiBearerAuth()
   @ApiParam({
     name: 'id',

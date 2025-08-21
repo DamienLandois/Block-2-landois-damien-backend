@@ -30,7 +30,7 @@ import { UserRole } from './enums/user-role.enum';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ApiOperation({ summary: 'Récupérer tous les utilisateurs' })
+  @ApiOperation({ summary: 'Récupérer tous les utilisateurs (Admin)' })
   @ApiResponse({
     status: 200,
     description: 'Liste des utilisateurs récupérée avec succès',
@@ -72,7 +72,7 @@ export class UserController {
     return this.userService.createUser(body, UserRole.USER);
   }
 
-  @ApiOperation({ summary: 'Créer un administrateur (Admin uniquement)' })
+  @ApiOperation({ summary: 'Créer un administrateur (Admin)' })
   @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'Administrateur créé avec succès' })
   @ApiResponse({ status: 401, description: 'Non autorisé' })
@@ -122,7 +122,7 @@ export class UserController {
   }
 
   @ApiOperation({
-    summary: "Modifier le rôle d'un utilisateur (Admin uniquement)",
+    summary: "Modifier le rôle d'un utilisateur (Admin)",
   })
   @ApiParam({ name: 'userId', description: "ID de l'utilisateur" })
   @ApiBody({
