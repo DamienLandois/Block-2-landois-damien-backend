@@ -4,32 +4,43 @@ import {
   IsString,
   MinLength,
   MaxLength,
+  Matches,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateUserDto {
   @ApiProperty({
     description: "Adresse email de l'utilisateur",
-    example: 'client@example.com',
+    example: 'user@example.com',
     format: 'email',
   })
   @IsEmail()
   email!: string;
 
   @ApiProperty({
-    description: "Mot de passe de l'utilisateur",
-    example: 'motdepasse123',
-    minLength: 8,
+    description:
+      "Mot de passe de l'utilisateur - Minimum 11 caractères avec au moins une majuscule, une minuscule, un chiffre et un symbole",
+    example: 'MonMotDePasse123!',
+    minLength: 11,
     maxLength: 72,
   })
   @IsString()
-  @MinLength(8)
+  @MinLength(11, {
+    message: 'Le mot de passe doit contenir au moins 11 caractères',
+  })
   @MaxLength(72)
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,./?]).+$/,
+    {
+      message:
+        'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un symbole (!@#$%^&*()_+-=[]{};\'"\\|,./?)',
+    },
+  )
   password!: string;
 
   @ApiProperty({
     description: "Prénom de l'utilisateur",
-    example: 'Marie',
+    example: 'Paul',
     required: false,
   })
   @IsOptional()
@@ -38,7 +49,7 @@ export class CreateUserDto {
 
   @ApiProperty({
     description: "Nom de famille de l'utilisateur",
-    example: 'Dupont',
+    example: 'Ochon',
     required: false,
   })
   @IsOptional()

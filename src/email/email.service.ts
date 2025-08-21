@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '../user/enums/user-role.enum';
+import { AppLoggerService } from '../common/logger/logger.service';
 
 interface InfosReservation {
   prenomClient: string;
@@ -21,6 +22,7 @@ export class EmailService {
   constructor(
     private readonly mailerService: MailerService,
     private readonly prisma: PrismaService,
+    private readonly logger: AppLoggerService,
   ) {}
 
   // Envoyer un email de confirmation au client
@@ -46,11 +48,14 @@ export class EmailService {
         },
       });
 
-      console.log(`Email de confirmation envoyé à ${infos.emailClient}`);
+      this.logger.log(
+        'Email de confirmation envoye avec succes',
+        'EmailService',
+      );
     } catch (erreur) {
-      console.error(
-        `Erreur lors de l'envoi de l'email à ${infos.emailClient}:`,
-        erreur,
+      this.logger.error(
+        'Erreur lors de envoi email de confirmation',
+        'EmailService',
       );
       throw erreur;
     }
@@ -69,15 +74,16 @@ export class EmailService {
       });
 
       const emailsAdmins = administrateurs.map((admin) => admin.email);
-      console.log(
-        `${emailsAdmins.length} administrateur(s) trouvé(s) pour les notifications`,
+      this.logger.log(
+        `${emailsAdmins.length} administrateurs trouves pour notifications`,
+        'EmailService',
       );
 
       return emailsAdmins;
-    } catch (erreur) {
-      console.error(
-        'Erreur lors de la récupération des emails admins:',
-        erreur,
+    } catch {
+      this.logger.error(
+        'Erreur lors de recuperation des emails admins',
+        'EmailService',
       );
       // En cas d'erreur, on retourne une liste vide pour éviter de bloquer l'application
       return [];
@@ -93,8 +99,9 @@ export class EmailService {
       const emailsAdmins = await this.getEmailsAdmins();
 
       if (emailsAdmins.length === 0) {
-        console.warn(
-          "Aucun administrateur trouvé pour l'envoi de notifications",
+        this.logger.warn(
+          'Aucun administrateur trouve pour notifications',
+          'EmailService',
         );
         return;
       }
@@ -119,11 +126,12 @@ export class EmailService {
         },
       });
 
-      console.log(
-        `Notification envoyée à ${emailsAdmins.length} administrateur(s): ${emailsAdmins.join(', ')}`,
+      this.logger.log(
+        `Notification envoyee a ${emailsAdmins.length} administrateurs`,
+        'EmailService',
       );
     } catch (erreur) {
-      console.error("Erreur lors de l'envoi aux admins:", erreur);
+      this.logger.error('Erreur lors de envoi aux admins', 'EmailService');
       throw erreur;
     }
   }
@@ -150,11 +158,11 @@ export class EmailService {
         },
       });
 
-      console.log(`Email d'annulation envoyé à ${infos.emailClient}`);
+      this.logger.log("Email d'annulation envoye avec succes", 'EmailService');
     } catch (erreur) {
-      console.error(
-        `Erreur lors de l'envoi de l'email d'annulation à ${infos.emailClient}:`,
-        erreur,
+      this.logger.error(
+        "Erreur lors de envoi email d'annulation",
+        'EmailService',
       );
       throw erreur;
     }

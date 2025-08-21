@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { AppLoggerService } from '../common/logger/logger.service';
 import {
   CreateBookingDto,
   CreateTimeSlotDto,
@@ -15,6 +16,8 @@ import {
 
 @Injectable()
 export class PlanningService {
+  private readonly logger = new AppLoggerService();
+
   constructor(
     private prisma: PrismaService,
     private emailService: EmailService,
@@ -144,34 +147,34 @@ export class PlanningService {
         throw new Error('Réservation sans heures définies trouvée');
       }
 
-      // Vérification du chevauchement direct (sans pause)
+      // Vérification du chevauchement direct
       const chevauchementDirect =
         heureDebut < autreFin && heureFin > autreDebut;
 
       if (chevauchementDirect) {
-        // Il y a chevauchement, on vérifie s'il y a assez de pause entre les massages
+        // Chevauchement complet = conflit
+        throw new ConflictException(
+          `Conflit d'horaire: ce créneau horaire est déjà occupé par un autre massage.`,
+        );
+      }
 
-        if (heureFin <= autreDebut) {
-          // Notre massage se termine avant l'autre commence
-          const pauseDisponible =
-            (autreDebut.getTime() - heureFin.getTime()) / (1000 * 60);
-          if (pauseDisponible < 30) {
-            throw new ConflictException(
-              `Pas assez de pause entre les massages. Il faut 30 minutes de pause minimum, vous n'avez que ${Math.round(pauseDisponible)} minutes.`,
-            );
-          }
-        } else if (heureDebut >= autreFin) {
-          // Notre massage commence après que l'autre se termine
-          const pauseDisponible = (heureDebut.getTime() - autreFin.getTime()) / (1000 * 60);
-          if (pauseDisponible < 30) {
-            throw new ConflictException(
-              `Pas assez de pause entre les massages. Il faut 30 minutes de pause minimum, vous n'avez que ${Math.round(pauseDisponible)} minutes.`,
-            );
-          }
-        } else {
-          // Chevauchement complet = conflit
+      // Vérification des pauses (seulement s'il n'y a pas de chevauchement)
+      if (heureFin <= autreDebut) {
+        // Notre massage se termine avant l'autre commence
+        const pauseDisponible =
+          (autreDebut.getTime() - heureFin.getTime()) / (1000 * 60);
+        if (pauseDisponible < 30) {
           throw new ConflictException(
-            `Conflit d'horaire: ce créneau horaire est déjà occupé par un autre massage.`,
+            `Pas assez de pause entre les massages. Il faut 30 minutes de pause minimum, vous n'avez que ${Math.round(pauseDisponible)} minutes.`,
+          );
+        }
+      } else if (heureDebut >= autreFin) {
+        // Notre massage commence après que l'autre se termine
+        const pauseDisponible =
+          (heureDebut.getTime() - autreFin.getTime()) / (1000 * 60);
+        if (pauseDisponible < 30) {
+          throw new ConflictException(
+            `Pas assez de pause entre les massages. Il faut 30 minutes de pause minimum, vous n'avez que ${Math.round(pauseDisponible)} minutes.`,
           );
         }
       }
@@ -218,13 +221,14 @@ export class PlanningService {
 
       // Notification aux admins
       await this.emailService.notifyAdmins(infosReservation);
-
-      console.log(
-        `Emails envoyés avec succès pour la réservation ${nouvelleReservation.id}`,
+    } catch {
+      this.logger.error(
+        'Erreur lors de envoi des emails de confirmation',
+        'PlanningService',
       );
-    } catch (erreurEmail) {
-      console.error("Erreur lors de l'envoi des emails:", erreurEmail);
       // On ne fait pas échouer la réservation si l'email ne part pas
+    } finally {
+      this.logger.log('Reservation créée avec succès', 'PlanningService');
     }
 
     return nouvelleReservation;
@@ -312,15 +316,16 @@ export class PlanningService {
       };
 
       await this.emailService.sendAnnulationClient(infosReservation);
-
-      console.log(
-        `Email d'annulation envoyé pour la réservation ${idReservation}`,
+    } catch (erreur) {
+      const errorMessage =
+        erreur instanceof Error ? erreur.message : String(erreur);
+      this.logger.error(
+        `Erreur lors de annulation de reservation: ${errorMessage}`,
+        'PlanningService',
       );
-    } catch (erreurEmail) {
-      console.error(
-        "Erreur lors de l'envoi de l'email d'annulation:",
-        erreurEmail,
-      );
+      // Ne pas faire échouer l'annulation si l'email ne part pas
+    } finally {
+      this.logger.log('Reservation annulee avec succes', 'PlanningService');
     }
 
     return reservationAnnulee;
