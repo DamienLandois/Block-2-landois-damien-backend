@@ -27,12 +27,7 @@ async function bootstrap() {
   );
 
   //Configuration CORS sécurisée
-  app.enableCors({
-    origin: [process.env.FRONTEND_URL],
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+  app.enableCors();
 
   // Configuration de Swagger (uniquement en développement)
   if (process.env.NODE_ENV !== 'production') {
