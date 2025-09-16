@@ -10,8 +10,6 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
-  ParseFilePipeBuilder,
-  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -85,20 +83,7 @@ export class MassageController {
   })
   create(
     @Body() createMassageDto: CreateMassageDto,
-    @UploadedFile(
-      new ParseFilePipeBuilder()
-        .addFileTypeValidator({
-          fileType: /(jpg|jpeg|png|gif)$/,
-        })
-        .addMaxSizeValidator({
-          maxSize: 5 * 1024 * 1024, // 5MB
-        })
-        .build({
-          fileIsRequired: false,
-          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
-        }),
-    )
-    image?: Express.Multer.File,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
     const imageName = image ? image.filename : null;
     return this.massageService.create(createMassageDto, imageName);
