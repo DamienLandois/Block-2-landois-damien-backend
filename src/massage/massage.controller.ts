@@ -25,6 +25,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { Response } from 'express';
+import * as fs from 'fs';
 import { MassageService } from './massage.service';
 import { CreateMassageDto, UpdateMassageDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -104,16 +105,28 @@ export class MassageController {
   }
 
   @Get('images/:filename')
-  @ApiOperation({ summary: 'Récupérer une image de massage' })
+  @ApiOperation({ summary: 'Récupérer l\'URL d\'une image de massage' })
   @ApiParam({
     name: 'filename',
     description: 'Nom du fichier image',
     type: 'string',
   })
-  @ApiResponse({ status: 200, description: 'Image retournée avec succès' })
+  @ApiResponse({ status: 200, description: 'URL de l\'image retournée avec succès' })
   @ApiResponse({ status: 404, description: 'Image non trouvée' })
-  getImage(@Param('filename') filename: string, @Res() res: Response) {
-    return res.sendFile(join(process.cwd(), 'uploads/images', filename));
+  getImage(@Param('filename') filename: string) {
+    // Vérifier si le fichier existe
+    const filePath = join(process.cwd(), 'uploads/images', filename);
+    
+    if (!fs.existsSync(filePath)) {
+      throw new Error('Image non trouvée');
+    }
+    
+    // Retourner l'URL de l'image (chemin relatif vers le fichier)
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3001';
+    return {
+      imageUrl: `${baseUrl}/uploads/images/${filename}`,
+      filename: filename
+    };
   }
 
   @Get()
