@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MinLength,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 
 export class UpdateUserDto {
   @ApiProperty({
@@ -13,7 +20,8 @@ export class UpdateUserDto {
   email?: string;
 
   @ApiProperty({
-    description: "Mot de passe de l'utilisateur - Minimum 11 caractères avec au moins une majuscule, une minuscule, un chiffre et un symbole",
+    description:
+      "Mot de passe de l'utilisateur - Minimum 11 caractères avec au moins une majuscule, une minuscule, un chiffre et un symbole",
     example: 'MonMotDePasse123!',
     minLength: 11,
     maxLength: 72,
